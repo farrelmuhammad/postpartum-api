@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Symptoms.init({
     symptom_name: DataTypes.STRING,
-    mb_symptom: DataTypes.INTEGER
+    mb_symptom: DataTypes.FLOAT
   }, {
     sequelize,
     modelName: 'Symptoms',

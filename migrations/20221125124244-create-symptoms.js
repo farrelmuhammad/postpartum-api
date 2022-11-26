@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       mb_symptom: {
-        type: Sequelize.INTEGER
+        type: Sequelize.FLOAT
       },
       createdAt: {
         allowNull: false,

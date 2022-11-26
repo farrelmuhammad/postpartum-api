@@ -2,6 +2,8 @@ const { Users, Profiles } = require("../models");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const getUser = async (req, res) => {}
+
 const register = async (req, res) => {
     const { username, password, role } = req.body;
     const salt = await bcrypt.genSalt();
@@ -184,6 +186,8 @@ const updateProfile = async (req, res) => {
 
 
 module.exports = {
+    getUsers,
+    getUserById,
     register,
     login,
     whoami,

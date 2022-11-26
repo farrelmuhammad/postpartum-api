@@ -184,6 +184,8 @@ const updateProfile = async (req, res) => {
 
 
 module.exports = {
+    getUsers,
+    getUserById,
     register,
     login,
     whoami,

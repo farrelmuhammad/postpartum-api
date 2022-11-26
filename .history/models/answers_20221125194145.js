@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Answers.init({
-    answer: DataTypes.STRING,
+    answer_name: DataTypes.STRING,
     md_user: DataTypes.FLOAT
   }, {
     sequelize,

@@ -13,16 +13,16 @@ const getAnswers = async (req, res) => {
         res.status(500).json({
             status: 500,
             message: "Something went wrong!",
-            error: error.message,
+            error: error.stack,
         });
     }
 }
 
 const createAnswer = async (req, res) => {
-    const { answer, md_user } = req.body;
+    const { answer_name, md_user } = req.body;
     try {
         const answers = await Answers.create({
-            answer,
+            answer_name,
             md_user
         });
         res.status(201);
@@ -41,11 +41,11 @@ const createAnswer = async (req, res) => {
 }
 
 const updateAnswers = async (req, res) => {
-    const { answer, md_user } = req.body;
+    const { answer_name, md_user } = req.body;
     const answersId = req.params.id;
     try {
         const answers = await Answers.update({
-            answer,
+            answer_name,
             md_user
         }, {
             where: {
