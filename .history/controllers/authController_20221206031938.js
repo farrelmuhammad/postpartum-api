@@ -22,6 +22,15 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     // const { username, password } = req.body;
+    const {
+        fullname,
+        address,
+        phone,
+        birth_date,
+        age,
+        gender,
+        email
+    } = req.body;
     try {
         const user = await Users.findOne({
             where: {
@@ -30,19 +39,20 @@ const login = async (req, res) => {
         })
 
         const foundProfile = await Profiles.findOne({
-            attributes: [
-                "id",
-                "fullname",
-                "address",
-                "phone",
-                "birth_date",
-                "gender",
-                "age",
-            ],
             where: {
-                userId: user.id,
+                id: user.id,
             },
         });
+
+        await foundProfile.create({
+            fullname,
+            address,
+            phone,
+            birth_date,
+            age,
+            gender,
+            email
+        })
 
         if (!user) {
             res.status(404);
@@ -153,42 +163,6 @@ const getProfileById = async (req, res) => {
     }
 }
 
-const createProfile = async (req, res) => {
-    const {
-        fullname,
-        address,
-        phone,
-        birth_date,
-        age,
-        gender,
-        email
-    } = req.body;
-    try {
-        const user = await Users.findOne({
-            where: {
-                username: req.params.username,
-            }
-        })
-        const profile = await Profiles.create({
-            fullname,
-            userId: user.id,
-            address,
-            phone,
-            birth_date,
-            age,
-            gender,
-            email
-        })
-        res.status(201).json({
-            statusCode: 201,
-            message: "Create profile success!",
-            data: profile,
-        })
-    } catch (error) {
-
-    }
-}
-
 const updateProfile = async (req, res) => {
     // const user = await Users.findOne({
     //     where: {
@@ -239,7 +213,7 @@ const updateProfile = async (req, res) => {
 module.exports = {
     register,
     login,
-    createProfile,
+    // whoami,
     logout,
     getProfileById,
     updateProfile

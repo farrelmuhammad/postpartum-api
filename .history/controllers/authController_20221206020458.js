@@ -28,7 +28,6 @@ const login = async (req, res) => {
                 username: req.body.username,
             }
         })
-
         const foundProfile = await Profiles.findOne({
             attributes: [
                 "id",
@@ -43,7 +42,6 @@ const login = async (req, res) => {
                 userId: user.id,
             },
         });
-
         if (!user) {
             res.status(404);
             return res.json({
@@ -87,22 +85,22 @@ const login = async (req, res) => {
         return res.json({
             status: 500,
             message: "Something went wrong!",
-            error: error.message,
+            error: error.stack,
         });
     }
 };
 
-// const whoami = async (req, res) => {
-//     try {
-//         checkToken(req, res);
-//     } catch (error) {
-//         return res.status(500).json({
-//             status: 500,
-//             message: "Something went wrong!",
-//             error: error.stack,
-//         });
-//     }
-// };
+const whoami = async (req, res) => {
+    try {
+        checkToken(req, res);
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: "Something went wrong!",
+            error: error.stack,
+        });
+    }
+};
 
 const logout = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
@@ -131,7 +129,7 @@ const logout = async (req, res) => {
 };
 
 const getProfileById = async (req, res) => {
-    // const userId = req.params.id;
+    const userId = req.params.id;
     try {
         const profile = await Users.findOne({
             where: {
@@ -153,50 +151,9 @@ const getProfileById = async (req, res) => {
     }
 }
 
-const createProfile = async (req, res) => {
-    const {
-        fullname,
-        address,
-        phone,
-        birth_date,
-        age,
-        gender,
-        email
-    } = req.body;
-    try {
-        const user = await Users.findOne({
-            where: {
-                username: req.params.username,
-            }
-        })
-        const profile = await Profiles.create({
-            fullname,
-            userId: user.id,
-            address,
-            phone,
-            birth_date,
-            age,
-            gender,
-            email
-        })
-        res.status(201).json({
-            statusCode: 201,
-            message: "Create profile success!",
-            data: profile,
-        })
-    } catch (error) {
-
-    }
-}
-
 const updateProfile = async (req, res) => {
-    // const user = await Users.findOne({
-    //     where: {
-    //         id: req.params.id,
-    //     }
-    // })
     const {
-        fullname,
+        name,
         address,
         phone,
         birth_date,
@@ -206,8 +163,8 @@ const updateProfile = async (req, res) => {
     } = req.body;
     const userId = req.params.id;
     try {
-        const profile = await Profiles.update({
-            fullname,
+        const profile = await Users.update({
+            name,
             address,
             phone,
             birth_date,
@@ -216,21 +173,21 @@ const updateProfile = async (req, res) => {
             email
         }, {
             where: {
-                userId: userId,
-            },
+                id: userId,
+            }
         }
         )
         res.status(200).json({
             statusCode: 200,
             message: "Update profile success!",
-            profileData: profile,
+            data: profile,
         });
     } catch (error) {
         res.status(500);
         return res.json({
             status: 500,
             message: "Something went wrong!",
-            error: error.message,
+            error: error.stack,
         });
     }
 };
@@ -239,7 +196,7 @@ const updateProfile = async (req, res) => {
 module.exports = {
     register,
     login,
-    createProfile,
+    whoami,
     logout,
     getProfileById,
     updateProfile

@@ -239,7 +239,7 @@ const updateProfile = async (req, res) => {
 module.exports = {
     register,
     login,
-    createProfile,
+    // whoami,
     logout,
     getProfileById,
     updateProfile
