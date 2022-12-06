@@ -13,31 +13,17 @@ const register = async (req, res) => {
             return res.json({
                 message: "Email already registered!",
                 statusCode: 409,
-            });
+            });    
         }
 
-        const user = await Users.create({
+        await Users.create({
             email,
             name,
             password: hashPassword,
             role,
         });
-
-        const { fullname, age, phone, address, birth_date, gender } = req.body;
-
-        const profile = await Profiles.create({
-            id: user.id,
-            fullname,
-            address,
-            phone,
-            birth_date,
-            gender,
-            age
-        });
-
         res.status(201).json({
             message: "Register success!",
-            data: profile,
         });
     } catch (error) {
         console.log(error);
@@ -53,54 +39,67 @@ const isEmailRegistered = (value) => {
 };
 
 const login = async (req, res) => {
-    const { email, password } = req.body;
+    // const { username, password } = req.body;
     try {
-        const userInfo = await isEmailRegistered(email);
-        const passwordMatch = await bcrypt.compare(password, userInfo.password);
+        const user = await Users.findOne({
+            where: {
+                username: req.body.username,
+            }
+        })
 
-        if (!passwordMatch) {
-            res.status(401);
+        const foundProfile = await Profiles.findOne({
+            attributes: [
+                "id",
+                "fullname",
+                "address",
+                "phone",
+                "birth_date",
+                "gender",
+                "age",
+            ],
+            where: {
+                userId: user.id,
+            },
+        });
+
+        if (!user) {
+            res.status(404);
             return res.json({
-                message: "Wrong password!",
-                statusCode: 401,
-            });
-        } else {
-            const user = { id: userInfo.id, email: userInfo.email, role: userInfo.role };
-
-            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
-
-            res.cookie("accessToken", accessToken, {
-                httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000,
-            });
-
-            const profile = await Profiles.findOne(
-                {
-                    where: {
-                        id: userInfo.id
-                    }
-                }
-            )
-
-            // const { fullname, age, phone, address, birth_date, gender } = req.body;
-
-            // const profile = await Profiles.create({
-            //     id: user.id,
-            //     fullname,
-            //     address,
-            //     phone,
-            //     birth_date,
-            //     gender,
-            //     age
-            // });
-
-            res.status(200).json({
-                message: "Login success!",
-                statusCode: 200,
-                accessToken: accessToken,
-                data: profile,
+                message: "Username is not registered!",
+                statusCode: 404,
             });
         }
+        const match = await bcrypt.compare(req.body.password, user.password);
+        if (!match) {
+            res.status(401);
+            return res.json({
+                message: "Username or password do not match!",
+                statusCode: 401,
+            });
+        }
+        req.user = { id: user.id, username: user.username, role: user.role };
+        const refreshToken = jwt.sign(
+            { userId: req.user.id, username: req.user.username, role: req.user.role },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: "1d" }
+        );
+        const accessToken = jwt.sign(
+            { userId: req.user.id, username: req.user.username, role: req.user.role },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: "1d" }
+        );
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+        console.log("Your path ", req._parsedUrl.pathname);
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Login success!",
+            accessToken: accessToken,
+            profileData: foundProfile,
+        });
     } catch (error) {
         res.status(500);
         return res.json({
@@ -149,66 +148,25 @@ const logout = async (req, res) => {
     }
 };
 
-const getUsers = async (req, res) => {
+const getProfileById = async (req, res) => {
+    // const userId = req.params.id;
     try {
-        const users = await Users.findAll({
-            // attributes: ["id", "email", "role"],
-            include: {
-                model: Profiles,
-                attributes: ["fullname", "address", "phone", "birth_date", "age", "gender"],
-                required: true
-            }
-        });
-        res.status(200).json({
-            statusCode: 200,
-            message: "Get all users success!",
-            data: users,
-        });
-    } catch (error) {
-        res.status(500);
-        return res.json({
-            status: 500,
-            message: "Something went wrong!",
-            error: error.message,
-        });
-    }
-}
-
-const updateProfile = async (req, res) => {
-    const profileId = req.params.id;
-    const {
-        fullname,
-        address,
-        phone,
-        birth_date,
-        age,
-        gender,
-    } = req.body;
-
-    try {
-        const profile = await Profiles.update({
-            fullname,
-            address,
-            phone,
-            birth_date,
-            age,
-            gender
-        }, {
+        const profile = await Users.findOne({
             where: {
-                id: profileId
+                id: userId,
             }
         })
         res.status(200).json({
             statusCode: 200,
-            message: "Update profile success!",
+            message: "Get profile success!",
             data: profile,
-        })
+        });
     } catch (error) {
         res.status(500);
         return res.json({
             status: 500,
             message: "Something went wrong!",
-            error: error.message,
+            error: error.stack,
         });
     }
 }
@@ -249,11 +207,58 @@ const createProfile = async (req, res) => {
     }
 }
 
+const updateProfile = async (req, res) => {
+    // const user = await Users.findOne({
+    //     where: {
+    //         id: req.params.id,
+    //     }
+    // })
+    const {
+        fullname,
+        address,
+        phone,
+        birth_date,
+        age,
+        gender,
+        email
+    } = req.body;
+    const userId = req.params.id;
+    try {
+        const profile = await Profiles.update({
+            fullname,
+            address,
+            phone,
+            birth_date,
+            age,
+            gender,
+            email
+        }, {
+            where: {
+                userId: userId,
+            },
+        }
+        )
+        res.status(200).json({
+            statusCode: 200,
+            message: "Update profile success!",
+            profileData: profile,
+        });
+    } catch (error) {
+        res.status(500);
+        return res.json({
+            status: 500,
+            message: "Something went wrong!",
+            error: error.message,
+        });
+    }
+};
+
+
 module.exports = {
     register,
     login,
     createProfile,
     logout,
-    getUsers,
+    getProfileById,
     updateProfile
 };

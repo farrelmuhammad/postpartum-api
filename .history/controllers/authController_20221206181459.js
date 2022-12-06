@@ -74,14 +74,6 @@ const login = async (req, res) => {
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
-            const profile = await Profiles.findOne(
-                {
-                    where: {
-                        id: userInfo.id
-                    }
-                }
-            )
-
             // const { fullname, age, phone, address, birth_date, gender } = req.body;
 
             // const profile = await Profiles.create({
@@ -98,7 +90,7 @@ const login = async (req, res) => {
                 message: "Login success!",
                 statusCode: 200,
                 accessToken: accessToken,
-                data: profile,
+                // data: profile,
             });
         }
     } catch (error) {

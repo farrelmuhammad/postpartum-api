@@ -1,18 +1,16 @@
 const express = require("express");
 const { createAnswer, getAnswers, updateAnswers, deleteAnswer } = require("../controllers/answerController");
 const router = express.Router();
-const { register, login, updateProfile, getUsers } = require("../controllers/authController");
+const { register, login, updateProfile, createProfile, getUsers } = require("../controllers/authController");
 const { createCategory, updateCategory, deleteCategory, getCategory, getCategoryById } = require("../controllers/categoryController");
-const { getProfile, createProfile } = require("../controllers/profileController");
 const { createSymptoms, getSymptoms, getSymptomsById, updateSymnptoms, deleteSymptoms } = require("../controllers/symptomController");
 
 router.post("/register", register);
 router.post("/login", login);
 
 router.get("/users", getUsers);
-router.get("/profile", getProfile);
-router.post("/profile", createProfile);
-router.put("/profile/:id", updateProfile);
+router.get("/profile", createProfile);
+router.put("/profile/update", updateProfile);
 
 router.post("/symptom", createSymptoms);
 router.put("/symptom/:id", updateSymnptoms);

@@ -13,31 +13,17 @@ const register = async (req, res) => {
             return res.json({
                 message: "Email already registered!",
                 statusCode: 409,
-            });
+            });    
         }
 
-        const user = await Users.create({
+        await Users.create({
             email,
             name,
             password: hashPassword,
             role,
         });
-
-        const { fullname, age, phone, address, birth_date, gender } = req.body;
-
-        const profile = await Profiles.create({
-            id: user.id,
-            fullname,
-            address,
-            phone,
-            birth_date,
-            gender,
-            age
-        });
-
         res.status(201).json({
             message: "Register success!",
-            data: profile,
         });
     } catch (error) {
         console.log(error);
@@ -57,8 +43,8 @@ const login = async (req, res) => {
     try {
         const userInfo = await isEmailRegistered(email);
         const passwordMatch = await bcrypt.compare(password, userInfo.password);
-
-        if (!passwordMatch) {
+        
+        if(!passwordMatch) {
             res.status(401);
             return res.json({
                 message: "Wrong password!",
@@ -74,33 +60,12 @@ const login = async (req, res) => {
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
-            const profile = await Profiles.findOne(
-                {
-                    where: {
-                        id: userInfo.id
-                    }
-                }
-            )
-
-            // const { fullname, age, phone, address, birth_date, gender } = req.body;
-
-            // const profile = await Profiles.create({
-            //     id: user.id,
-            //     fullname,
-            //     address,
-            //     phone,
-            //     birth_date,
-            //     gender,
-            //     age
-            // });
-
             res.status(200).json({
                 message: "Login success!",
                 statusCode: 200,
                 accessToken: accessToken,
-                data: profile,
             });
-        }
+        } 
     } catch (error) {
         res.status(500);
         return res.json({
@@ -152,10 +117,10 @@ const logout = async (req, res) => {
 const getUsers = async (req, res) => {
     try {
         const users = await Users.findAll({
-            // attributes: ["id", "email", "role"],
+            attributes: ["id", "email", "role"],
             include: {
                 model: Profiles,
-                attributes: ["fullname", "address", "phone", "birth_date", "age", "gender"],
+                attributes: ["fullname", "address", "phone", "birth_date", "age"],
                 required: true
             }
         });
@@ -164,45 +129,6 @@ const getUsers = async (req, res) => {
             message: "Get all users success!",
             data: users,
         });
-    } catch (error) {
-        res.status(500);
-        return res.json({
-            status: 500,
-            message: "Something went wrong!",
-            error: error.message,
-        });
-    }
-}
-
-const updateProfile = async (req, res) => {
-    const profileId = req.params.id;
-    const {
-        fullname,
-        address,
-        phone,
-        birth_date,
-        age,
-        gender,
-    } = req.body;
-
-    try {
-        const profile = await Profiles.update({
-            fullname,
-            address,
-            phone,
-            birth_date,
-            age,
-            gender
-        }, {
-            where: {
-                id: profileId
-            }
-        })
-        res.status(200).json({
-            statusCode: 200,
-            message: "Update profile success!",
-            data: profile,
-        })
     } catch (error) {
         res.status(500);
         return res.json({
@@ -249,11 +175,58 @@ const createProfile = async (req, res) => {
     }
 }
 
+const updateProfile = async (req, res) => {
+    // const user = await Users.findOne({
+    //     where: {
+    //         id: req.params.id,
+    //     }
+    // })
+    const {
+        fullname,
+        address,
+        phone,
+        birth_date,
+        age,
+        gender,
+        email
+    } = req.body;
+    const userId = req.params.id;
+    try {
+        const profile = await Profiles.update({
+            fullname,
+            address,
+            phone,
+            birth_date,
+            age,
+            gender,
+            email
+        }, {
+            where: {
+                userId: userId,
+            },
+        }
+        )
+        res.status(200).json({
+            statusCode: 200,
+            message: "Update profile success!",
+            profileData: profile,
+        });
+    } catch (error) {
+        res.status(500);
+        return res.json({
+            status: 500,
+            message: "Something went wrong!",
+            error: error.message,
+        });
+    }
+};
+
+
 module.exports = {
     register,
     login,
     createProfile,
     logout,
-    getUsers,
+    getProfileById,
     updateProfile
 };

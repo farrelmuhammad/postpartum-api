@@ -12,7 +12,7 @@ router.post("/login", login);
 router.get("/users", getUsers);
 router.get("/profile", getProfile);
 router.post("/profile", createProfile);
-router.put("/profile/:id", updateProfile);
+router.put("/profile/update", updateProfile);
 
 router.post("/symptom", createSymptoms);
 router.put("/symptom/:id", updateSymnptoms);

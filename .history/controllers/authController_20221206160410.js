@@ -13,31 +13,17 @@ const register = async (req, res) => {
             return res.json({
                 message: "Email already registered!",
                 statusCode: 409,
-            });
+            });    
         }
 
-        const user = await Users.create({
+        await Users.create({
             email,
             name,
             password: hashPassword,
             role,
         });
-
-        const { fullname, age, phone, address, birth_date, gender } = req.body;
-
-        const profile = await Profiles.create({
-            id: user.id,
-            fullname,
-            address,
-            phone,
-            birth_date,
-            gender,
-            age
-        });
-
         res.status(201).json({
             message: "Register success!",
-            data: profile,
         });
     } catch (error) {
         console.log(error);
@@ -52,60 +38,49 @@ const isEmailRegistered = (value) => {
     });
 };
 
+const generateAccessToken = (userInfo) => {
+    return jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+    });
+}
+
 const login = async (req, res) => {
     const { email, password } = req.body;
     try {
         const userInfo = await isEmailRegistered(email);
         const passwordMatch = await bcrypt.compare(password, userInfo.password);
-
-        if (!passwordMatch) {
+        
+        if(!passwordMatch) {
             res.status(401);
             return res.json({
                 message: "Wrong password!",
                 statusCode: 401,
             });
         } else {
-            const user = { id: userInfo.id, email: userInfo.email, role: userInfo.role };
-
-            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
-
+            const accessToken = generateAccessToken(userInfo);
+            const refreshToken = generateRefreshToken(userInfo);
             res.cookie("accessToken", accessToken, {
+                maxAge: 60 * 60 * 1000,
                 httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000,
             });
-
-            const profile = await Profiles.findOne(
-                {
-                    where: {
-                        id: userInfo.id
-                    }
-                }
-            )
-
-            // const { fullname, age, phone, address, birth_date, gender } = req.body;
-
-            // const profile = await Profiles.create({
-            //     id: user.id,
-            //     fullname,
-            //     address,
-            //     phone,
-            //     birth_date,
-            //     gender,
-            //     age
-            // });
-
+            res.cookie("refreshToken", refreshToken, {
+                maxAge: 60 * 60 * 1000,
+                httpOnly: true,
+            });
             res.status(200).json({
                 message: "Login success!",
                 statusCode: 200,
-                accessToken: accessToken,
-                data: profile,
+                data: {
+                    accessToken,
+                    refreshToken,
+                },
             });
         }
     } catch (error) {
         res.status(500);
         return res.json({
-            status: 500,
             message: "Something went wrong!",
+            statusCode: 500,
             error: error.message,
         });
     }
@@ -149,66 +124,25 @@ const logout = async (req, res) => {
     }
 };
 
-const getUsers = async (req, res) => {
+const getProfileById = async (req, res) => {
+    // const userId = req.params.id;
     try {
-        const users = await Users.findAll({
-            // attributes: ["id", "email", "role"],
-            include: {
-                model: Profiles,
-                attributes: ["fullname", "address", "phone", "birth_date", "age", "gender"],
-                required: true
-            }
-        });
-        res.status(200).json({
-            statusCode: 200,
-            message: "Get all users success!",
-            data: users,
-        });
-    } catch (error) {
-        res.status(500);
-        return res.json({
-            status: 500,
-            message: "Something went wrong!",
-            error: error.message,
-        });
-    }
-}
-
-const updateProfile = async (req, res) => {
-    const profileId = req.params.id;
-    const {
-        fullname,
-        address,
-        phone,
-        birth_date,
-        age,
-        gender,
-    } = req.body;
-
-    try {
-        const profile = await Profiles.update({
-            fullname,
-            address,
-            phone,
-            birth_date,
-            age,
-            gender
-        }, {
+        const profile = await Users.findOne({
             where: {
-                id: profileId
+                id: userId,
             }
         })
         res.status(200).json({
             statusCode: 200,
-            message: "Update profile success!",
+            message: "Get profile success!",
             data: profile,
-        })
+        });
     } catch (error) {
         res.status(500);
         return res.json({
             status: 500,
             message: "Something went wrong!",
-            error: error.message,
+            error: error.stack,
         });
     }
 }
@@ -249,11 +183,58 @@ const createProfile = async (req, res) => {
     }
 }
 
+const updateProfile = async (req, res) => {
+    // const user = await Users.findOne({
+    //     where: {
+    //         id: req.params.id,
+    //     }
+    // })
+    const {
+        fullname,
+        address,
+        phone,
+        birth_date,
+        age,
+        gender,
+        email
+    } = req.body;
+    const userId = req.params.id;
+    try {
+        const profile = await Profiles.update({
+            fullname,
+            address,
+            phone,
+            birth_date,
+            age,
+            gender,
+            email
+        }, {
+            where: {
+                userId: userId,
+            },
+        }
+        )
+        res.status(200).json({
+            statusCode: 200,
+            message: "Update profile success!",
+            profileData: profile,
+        });
+    } catch (error) {
+        res.status(500);
+        return res.json({
+            status: 500,
+            message: "Something went wrong!",
+            error: error.message,
+        });
+    }
+};
+
+
 module.exports = {
     register,
     login,
     createProfile,
     logout,
-    getUsers,
+    getProfileById,
     updateProfile
 };

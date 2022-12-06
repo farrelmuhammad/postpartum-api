@@ -11,7 +11,7 @@ router.post("/login", login);
 
 router.get("/users", getUsers);
 router.get("/profile", getProfile);
-router.post("/profile", createProfile);
+router.post("/profile/:id", createProfile);
 router.put("/profile/:id", updateProfile);
 
 router.post("/symptom", createSymptoms);

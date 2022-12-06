@@ -16,17 +16,9 @@ const register = async (req, res) => {
             });
         }
 
-        const user = await Users.create({
-            email,
-            name,
-            password: hashPassword,
-            role,
-        });
-
         const { fullname, age, phone, address, birth_date, gender } = req.body;
 
         const profile = await Profiles.create({
-            id: user.id,
             fullname,
             address,
             phone,
@@ -35,6 +27,12 @@ const register = async (req, res) => {
             age
         });
 
+        await Users.create({
+            email,
+            name,
+            password: hashPassword,
+            role,
+        });
         res.status(201).json({
             message: "Register success!",
             data: profile,
@@ -73,14 +71,6 @@ const login = async (req, res) => {
                 httpOnly: true,
                 maxAge: 24 * 60 * 60 * 1000,
             });
-
-            const profile = await Profiles.findOne(
-                {
-                    where: {
-                        id: userInfo.id
-                    }
-                }
-            )
 
             // const { fullname, age, phone, address, birth_date, gender } = req.body;
 
