@@ -1,5 +1,5 @@
 const express = require("express");
-const { createActivity, getActivity, getActivityById } = require("../controllers/activityController");
+const { createActivity } = require("../controllers/activityController");
 const { createAnswer, getAnswers, updateAnswers, deleteAnswer } = require("../controllers/answerController");
 const router = express.Router();
 const { register, login, updateProfile, getUsers } = require("../controllers/authController");
@@ -16,8 +16,6 @@ router.post("/profile", createProfile);
 router.put("/profile/:id", updateProfile);
 
 router.post("/activity", createActivity);
-router.get("/activity", getActivity);
-router.get("/activity/:id", getActivityById);
 
 router.post("/symptom", createSymptoms);
 router.put("/symptom/:id", updateSymnptoms);
