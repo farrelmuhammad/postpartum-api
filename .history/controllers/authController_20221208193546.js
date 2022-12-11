@@ -65,7 +65,7 @@ const login = async (req, res) => {
                 statusCode: 401,
             });
         } else {
-            const user = { id: userInfo.id, name: userInfo.name, email: userInfo.email, role: userInfo.role };
+            const user = { id: userInfo.id, email: userInfo.email, role: userInfo.role };
 
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
 

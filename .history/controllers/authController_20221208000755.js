@@ -23,11 +23,11 @@ const register = async (req, res) => {
             role,
         });
 
-        const { age, phone, address, birth_date, gender } = req.body;
+        const { fullname, age, phone, address, birth_date, gender } = req.body;
 
         const profile = await Profiles.create({
             id: user.id,
-            fullname: name,
+            fullname,
             address,
             phone,
             birth_date,
@@ -65,7 +65,7 @@ const login = async (req, res) => {
                 statusCode: 401,
             });
         } else {
-            const user = { id: userInfo.id, name: userInfo.name, email: userInfo.email, role: userInfo.role };
+            const user = { id: userInfo.id, email: userInfo.email, role: userInfo.role };
 
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
 
@@ -213,19 +213,21 @@ const updateProfile = async (req, res) => {
     }
 }
 
-const getProfileById = async (req, res) => {
-    const profileId = req.params.id;
+const getProfiles = async (req, res) => {
     try {
-        const profile = await Profiles.findOne({
-            where: {
-                id: profileId
+        const profiles = await Profiles.findAll({
+            attributes: ["name", "address", "phone", "birth_date", "age", "gender"],
+            include: {
+                model: Users,
+                attributes: ["fullname", "email", "role"],
+                required: true
             }
-        })
+        });
         res.status(200).json({
             statusCode: 200,
-            message: "Get profile success!",
-            data: profile,
-        })
+            message: "Get all profiles success!",
+            data: profiles,
+        });
     } catch (error) {
         res.status(500);
         return res.json({
@@ -279,5 +281,5 @@ module.exports = {
     logout,
     getUsers,
     updateProfile,
-    getProfileById
+    getProfiles
 };

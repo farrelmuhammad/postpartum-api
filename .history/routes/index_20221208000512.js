@@ -2,16 +2,16 @@ const express = require("express");
 const { createActivity, getActivity, getActivityById } = require("../controllers/activityController");
 const { createAnswer, getAnswers, updateAnswers, deleteAnswer } = require("../controllers/answerController");
 const router = express.Router();
-const { register, login, updateProfile, getUsers, getProfileById } = require("../controllers/authController");
+const { register, login, updateProfile, getUsers } = require("../controllers/authController");
 const { createCategory, updateCategory, deleteCategory, getCategory, getCategoryById } = require("../controllers/categoryController");
-const { createProfile } = require("../controllers/profileController");
+const { getProfile, createProfile } = require("../controllers/profileController");
 const { createSymptoms, getSymptoms, getSymptomsById, updateSymnptoms, deleteSymptoms } = require("../controllers/symptomController");
 
 router.post("/register", register);
 router.post("/login", login);
 
 router.get("/users", getUsers);
-router.get("/profile/:id", getProfileById);
+router.get("/profile", getUsers);
 router.post("/profile", createProfile);
 router.put("/profile/:id", updateProfile);
 
